@@ -36,6 +36,7 @@ class PublicUserAPiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(email=payload['email'])
         self.assertTrue(user.check_password(payload['password']))
+        self.assertNotIn('password', res.data)
 
     def test_user_with_email_exits_error(self):
         """Test error returned if user with email exists"""
@@ -92,6 +93,14 @@ class PublicUserAPiTests(TestCase):
         res = self.client.post(TOKEN_URL, payload)
 
         self.assertNotIn('token', res.data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_token_email_not_found(self):
+        """Test error returned if user not found for given email."""
+        payload = {'email': 'test@example.com', 'password': 'pass123'}
+        res = self.client.post(TOKEN_URL, payload)
+        self.assertNotIn('token', res.data)
+
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_token_blank_password(self):
